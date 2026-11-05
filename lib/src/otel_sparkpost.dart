@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_sparkpost_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_sparkpost';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class SparkpostResult {
+  /// Creates a result.
   const SparkpostResult({
     this.transmissionId,
     this.totalAcceptedRecipients,
@@ -52,8 +53,13 @@ class SparkpostResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class SparkpostCallResult<T> {
+  /// Creates a call result.
   const SparkpostCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final SparkpostResult? result;
 }
@@ -84,62 +90,62 @@ Future<T> tracedSparkpost<T>({
   final span = _tracer().startSpan(
     'sparkpost $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.transmissionId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'sparkpost.transmission.id',
           r.result!.transmissionId!,
         ));
       }
       if (r.result!.totalAcceptedRecipients != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'sparkpost.accepted',
           r.result!.totalAcceptedRecipients!,
         ));
       }
       if (r.result!.totalRejectedRecipients != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'sparkpost.rejected',
           r.result!.totalRejectedRecipients!,
         ));
       }
       if (r.result!.templateId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'sparkpost.template.id',
           r.result!.templateId!,
         ));
       }
       if (r.result!.subaccountId != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'sparkpost.subaccount.id',
           r.result!.subaccountId!,
         ));
       }
       if (r.result!.region != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'sparkpost.region',
           r.result!.region!,
         ));
       }
       if (r.result!.sandboxFrom != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'sparkpost.sandbox_from',
           r.result!.sandboxFrom!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'sparkpost.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -150,13 +156,13 @@ Future<T> tracedSparkpost<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
